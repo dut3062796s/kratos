@@ -19,6 +19,7 @@ func installBMGen() error {
 	}
 	return nil
 }
+
 func genBM(ctx *cli.Context) error {
 	return generate(ctx, _bmProtoc)
 }

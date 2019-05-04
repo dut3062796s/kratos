@@ -22,6 +22,11 @@ func main() {
 			Usage:       "whether to use gRPC for generation",
 			Destination: &withGRPC,
 		},
+		cli.BoolFlag{
+			Name:        "swagger",
+			Usage:       "whether to use swagger for generation",
+			Destination: &withSwagger,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return protocAction(c)

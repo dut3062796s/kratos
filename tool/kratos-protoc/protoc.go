@@ -15,16 +15,27 @@ import (
 )
 
 var (
-	withGRPC bool
-	withBM   bool
+	withBM      bool
+	withGRPC    bool
+	withSwagger bool
 )
 
 func protocAction(ctx *cli.Context) (err error) {
 	if err = checkProtoc(); err != nil {
 		return err
 	}
-	if !withGRPC && !withBM {
-		return errors.New("must be options: [--grpc] or [--bm]")
+	if !withGRPC && !withBM && !withSwagger {
+		withBM = true
+		withGRPC = true
+		withSwagger = true
+	}
+	if withBM {
+		if err = installBMGen(); err != nil {
+			return
+		}
+		if err = genBM(ctx); err != nil {
+			return
+		}
 	}
 	if withGRPC {
 		if err = installGRPCGen(); err != nil {
@@ -34,11 +45,11 @@ func protocAction(ctx *cli.Context) (err error) {
 			return
 		}
 	}
-	if withBM {
-		if err = installBMGen(); err != nil {
+	if withSwagger {
+		if err = installSwaggerGen(); err != nil {
 			return
 		}
-		if err = genBM(ctx); err != nil {
+		if err = genSwagger(ctx); err != nil {
 			return
 		}
 	}
@@ -106,7 +117,7 @@ func goget(url string) error {
 
 func latestKratos() (string, error) {
 	gopath := os.Getenv("GOPATH")
-	ext := path.Join(gopath, "src/github.com/bilibili/kratos/tool/protobuf/extensions")
+	ext := path.Join(gopath, "src/github.com/bilibili/kratos/tool/protobuf/pkg/extensions")
 	if _, err := os.Stat(ext); !os.IsNotExist(err) {
 		return ext, nil
 	}
@@ -118,5 +129,5 @@ func latestKratos() (string, error) {
 	if len(files) == 0 {
 		return "", errors.New("not found kratos package")
 	}
-	return path.Join(ext, files[len(files)-1].Name(), "tool/protobuf/extensions"), nil
+	return path.Join(ext, files[len(files)-1].Name(), "tool/protobuf/pkg/extensions"), nil
 }
