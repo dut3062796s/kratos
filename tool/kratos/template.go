@@ -406,7 +406,7 @@ service Demo {
 	rpc SayHello (HelloReq) returns (.google.protobuf.Empty);
 	rpc SayHelloURL(HelloReq) returns (HelloResp) {
         option (google.api.http) = {
-            get:"/demo/say_hello"
+            get:"/{{.Name}}/say_hello"
         };
     };
 }
