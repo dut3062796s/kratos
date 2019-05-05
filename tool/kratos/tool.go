@@ -152,6 +152,7 @@ func (t Tool) install() {
 		fmt.Fprintf(os.Stderr, color.RedString("%s: 自动安装失败详情请查看文档：%s\n", t.Name, toolDoc))
 		return
 	}
+	fmt.Println(t.Install)
 	cmds := strings.Split(t.Install, " ")
 	if len(cmds) > 0 {
 		if err := runTool(t.Name, path.Dir(t.toolPath()), cmds[0], cmds[1:]); err == nil {

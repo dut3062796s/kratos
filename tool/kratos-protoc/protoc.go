@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"go/build"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -85,7 +87,7 @@ func checkProtoc() error {
 
 func generate(ctx *cli.Context, protoc string) error {
 	pwd, _ := os.Getwd()
-	gosrc := path.Join(os.Getenv("GOPATH"), "src")
+	gosrc := path.Join(gopath(), "src")
 	ext, err := latestKratos()
 	if err != nil {
 		return err
@@ -116,7 +118,7 @@ func goget(url string) error {
 }
 
 func latestKratos() (string, error) {
-	gopath := os.Getenv("GOPATH")
+	gopath := gopath()
 	ext := path.Join(gopath, "src/github.com/bilibili/kratos/tool/protobuf/pkg/extensions")
 	if _, err := os.Stat(ext); !os.IsNotExist(err) {
 		return ext, nil
@@ -130,4 +132,29 @@ func latestKratos() (string, error) {
 		return "", errors.New("not found kratos package")
 	}
 	return path.Join(ext, files[len(files)-1].Name(), "tool/protobuf/pkg/extensions"), nil
+}
+
+func gopath() (gp string) {
+	gopaths := strings.Split(os.Getenv("GOPATH"), ":")
+	if len(gopaths) == 1 {
+		return gopaths[0]
+	}
+	pwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	abspwd, err := filepath.Abs(pwd)
+	if err != nil {
+		return
+	}
+	for _, gopath := range gopaths {
+		absgp, err := filepath.Abs(gopath)
+		if err != nil {
+			return
+		}
+		if strings.HasPrefix(abspwd, absgp) {
+			return absgp
+		}
+	}
+	return build.Default.GOPATH
 }
