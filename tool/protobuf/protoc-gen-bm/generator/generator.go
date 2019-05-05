@@ -44,9 +44,9 @@ func (t *bm) Generate(in *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResp
 
 func (t *bm) generateForFile(file *descriptor.FileDescriptorProto) *plugin.CodeGeneratorResponse_File {
 	resp := new(plugin.CodeGeneratorResponse_File)
-	if len(file.Service) == 0 {
-		return nil
-	}
+	//if len(file.Service) == 0 {
+	//	return nil
+	//}
 
 	t.generateFileHeader(file, t.GenPkgName)
 	t.generateImports(file)
@@ -56,9 +56,9 @@ func (t *bm) generateForFile(file *descriptor.FileDescriptorProto) *plugin.CodeG
 		count += t.generateBMInterface(file, service)
 		t.generateBMRoute(file, service, i)
 	}
-	if count == 0 {
-		return nil
-	}
+	//if count == 0 {
+	//	return nil
+	//}
 
 	resp.Name = proto.String(naming.GoFileName(file, ".bm.go"))
 	resp.Content = proto.String(t.FormattedOutput())
@@ -114,9 +114,9 @@ func (t *bm) generateFileHeader(file *descriptor.FileDescriptorProto, pkgName st
 }
 
 func (t *bm) generateImports(file *descriptor.FileDescriptorProto) {
-	if len(file.Service) == 0 {
-		return
-	}
+	//if len(file.Service) == 0 {
+	//	return
+	//}
 	t.P(`import (`)
 	//t.P(`	`,t.pkgs["context"], ` "context"`)
 	t.P(`	"context"`)
@@ -131,7 +131,15 @@ func (t *bm) generateImports(file *descriptor.FileDescriptorProto) {
 	deps := make(map[string]string) // Map of package name to quoted import path.
 	deps = t.DeduceDeps(file)
 	for pkg, importPath := range deps {
-		t.P(`import `, pkg, ` `, importPath)
+		for _, service := range file.Service {
+			for _, method := range service.Method {
+				inputType := t.GoTypeName(method.GetInputType())
+				outputType := t.GoTypeName(method.GetOutputType())
+				if strings.HasPrefix(pkg, outputType) || strings.HasPrefix(pkg, inputType) {
+					t.P(`import `, pkg, ` `, importPath)
+				}
+			}
+		}
 	}
 	if len(deps) > 0 {
 		t.P()
@@ -299,7 +307,7 @@ func (t *bm) hasHeaderTag(md *typemap.MessageDefinition) bool {
 func (t *bm) generateBMInterface(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) int {
 	count := 0
 	servName := naming.ServiceName(service)
-	t.sectionComment(servName + ` Interface`)
+	t.P("// " + servName + "BMServer is the server API for " + servName + " service.")
 
 	comments, err := t.Reg.ServiceComments(file, service)
 	if err == nil {
